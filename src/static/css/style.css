@@ -942,4 +942,91 @@ button:disabled { background-color: var(--gray); cursor: not-allowed; }
     padding: 5px;
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
+}
+
+/* Estilos para Inventário e Itens */
+.inventory-grid, .equipment-grid, .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.inventory-slot, .equipment-slot, .item {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(30, 30, 40, 0.5);
+    border: 1px solid #333;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inventory-slot:hover, .equipment-slot:hover, .item:hover {
+    background-color: rgba(50, 50, 60, 0.7);
+    transform: translateY(-2px);
+}
+
+.equipment-slot {
+    border: 1px solid #444;
+    background-color: rgba(40, 40, 50, 0.4);
+}
+
+.equipment-slot .slot-name {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #aaa;
+}
+
+.inventory-slot.filled, .equipment-slot.filled {
+    border-color: #666;
+    background-color: rgba(40, 40, 50, 0.8);
+}
+
+.item-image, .item-icon {
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-quantity {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: rgba(20, 20, 30, 0.8);
+    color: #fff;
+    border-radius: 3px;
+    padding: 1px 3px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Cores de raridade */
+.item-rarity-common, .item-tooltip .tooltip-name.item-rarity-common {
+    color: #aaa;
+}
+
+.item-rarity-uncommon, .item-tooltip .tooltip-name.item-rarity-uncommon {
+    color: #1a9f1a;
+}
+
+.item-rarity-rare, .item-tooltip .tooltip-name.item-rarity-rare {
+    color: #3333dd;
+}
+
+.item-rarity-epic, .item-tooltip .tooltip-name.item-rarity-epic {
+    color: #9933cc;
+}
+
+.item-rarity-legendary, .item-tooltip .tooltip-name.item-rarity-legendary {
+    color: #cc9933;
 } 

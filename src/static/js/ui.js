@@ -781,6 +781,21 @@ class UI {
         const statsElement = document.getElementById('item-details-stats');
         statsElement.innerHTML = '';
         
+        // Adicionar quantidade se houver
+        if (item.quantity && item.quantity > 1) {
+            const quantityRow = document.createElement('div');
+            quantityRow.textContent = `Quantidade: ${item.quantity}`;
+            statsElement.appendChild(quantityRow);
+        }
+        
+        // Adicionar preço de venda se aplicável
+        if (item.price) {
+            const sellPriceRow = document.createElement('div');
+            const sellPrice = Math.floor(item.price * 0.05);
+            sellPriceRow.textContent = `Preço de venda: ${sellPrice} ouro`;
+            statsElement.appendChild(sellPriceRow);
+        }
+        
         if (item.stats) {
             const stats = item.stats;
             
@@ -806,7 +821,10 @@ class UI {
                 }
             }
         } else {
-            statsElement.textContent = 'Este item não possui estatísticas.';
+            // Só exibiremos "Sem estatísticas" se não houver quantidade ou preço de venda
+            if (!item.quantity && !item.price) {
+                statsElement.textContent = 'Este item não possui estatísticas.';
+            }
         }
         
         // Configurar botões de ação
@@ -815,20 +833,66 @@ class UI {
         const useBtn = document.getElementById('item-use-btn');
         const sellBtn = document.getElementById('item-sell-btn');
         
-        equipBtn.classList.add('hidden');
-        unequipBtn.classList.add('hidden');
-        useBtn.classList.add('hidden');
+        // Limpar eventos anteriores dos botões
+        const cloneEquipBtn = equipBtn.cloneNode(true);
+        const cloneUnequipBtn = unequipBtn.cloneNode(true);
+        const cloneUseBtn = useBtn.cloneNode(true);
+        const cloneSellBtn = sellBtn.cloneNode(true);
         
+        equipBtn.parentNode.replaceChild(cloneEquipBtn, equipBtn);
+        unequipBtn.parentNode.replaceChild(cloneUnequipBtn, unequipBtn);
+        useBtn.parentNode.replaceChild(cloneUseBtn, useBtn);
+        sellBtn.parentNode.replaceChild(cloneSellBtn, sellBtn);
+        
+        // Redefinir as referências após a clonagem
+        const newEquipBtn = document.getElementById('item-equip-btn');
+        const newUnequipBtn = document.getElementById('item-unequip-btn');
+        const newUseBtn = document.getElementById('item-use-btn');
+        const newSellBtn = document.getElementById('item-sell-btn');
+        
+        // Esconder todos os botões por padrão
+        newEquipBtn.classList.add('hidden');
+        newUnequipBtn.classList.add('hidden');
+        newUseBtn.classList.add('hidden');
+        
+        // Definir comportamento dos botões com base na fonte do item
         if (item.source === 'inventory') {
             if (item.is_equippable) {
-                equipBtn.classList.remove('hidden');
+                newEquipBtn.classList.remove('hidden');
+                newEquipBtn.addEventListener('click', () => {
+                    if (this.game && this.game.equipItem) {
+                        this.game.equipItem(item);
+                    }
+                });
             }
             
-            if (item.is_consumable) {
-                useBtn.classList.remove('hidden');
+            if (item.item_type === 'consumable') {
+                newUseBtn.classList.remove('hidden');
+                newUseBtn.addEventListener('click', () => {
+                    if (this.game && this.game.useItem) {
+                        this.game.useItem(item);
+                    }
+                });
             }
+            
+            // O botão de vender está sempre disponível para itens do inventário
+            newSellBtn.addEventListener('click', () => {
+                if (this.game && this.game.sellItem) {
+                    this.game.sellItem(item);
+                }
+            });
+            
         } else if (item.source === 'equipment') {
-            unequipBtn.classList.remove('hidden');
+            // Mostrar botão de desequipar para itens equipados
+            newUnequipBtn.classList.remove('hidden');
+            newUnequipBtn.addEventListener('click', () => {
+                if (this.game && this.game.unequipItem) {
+                    this.game.unequipItem(item);
+                }
+            });
+            
+            // Esconder botão de vender para itens equipados
+            newSellBtn.classList.add('hidden');
         }
         
         // Mostrar tela
@@ -1178,6 +1242,9 @@ class UI {
      * @param {Array} equipment - Itens equipados
      */
     updateSidebarInventory(inventory = [], equipment = []) {
+        // Agrupar itens idênticos
+        const groupedInventory = this.groupSimilarItems(inventory);
+        
         // Limpar slots de inventário
         const inventorySlots = document.querySelectorAll('.inventory-slot');
         inventorySlots.forEach(slot => {
@@ -1199,8 +1266,8 @@ class UI {
         });
         
         // Preencher slots de inventário
-        if (inventory && inventory.length > 0) {
-            inventory.forEach((item, index) => {
+        if (groupedInventory && groupedInventory.length > 0) {
+            groupedInventory.forEach((item, index) => {
                 if (index >= inventorySlots.length) return;
                 
                 const slot = inventorySlots[index];
@@ -1227,12 +1294,20 @@ class UI {
                 itemElement.textContent = icon;
                 slot.appendChild(itemElement);
                 
+                // Adicionar indicador de quantidade se for maior que 1
+                if (item.quantity && item.quantity > 1) {
+                    const quantityBadge = document.createElement('div');
+                    quantityBadge.className = 'item-quantity';
+                    quantityBadge.textContent = `x${item.quantity}`;
+                    slot.appendChild(quantityBadge);
+                }
+                
                 // Adicionar tooltip ao slot
                 this.addItemTooltip(slot, item);
                 
                 // Adicionar evento de clique
                 slot.onclick = () => {
-                    this.showItemDetails(item);
+                    this.game.selectItem(item, 'inventory');
                 };
             });
         }
@@ -1287,7 +1362,7 @@ class UI {
                 
                 // Adicionar evento de clique
                 slot.onclick = () => {
-                    this.showItemDetails(item);
+                    this.game.selectItem(item, 'equipment');
                 };
             });
         }
@@ -1297,12 +1372,47 @@ class UI {
         const maxElement = document.getElementById('inventory-max');
         
         if (countElement) {
-            countElement.textContent = inventory ? inventory.length : 0;
+            countElement.textContent = groupedInventory ? groupedInventory.length : 0;
         }
         
         if (maxElement && this.game.player) {
             maxElement.textContent = this.game.player.inventory_size || 20;
         }
+    }
+    
+    /**
+     * Agrupa itens similares no inventário
+     * @param {Array} inventory - Lista de itens do inventário
+     * @returns {Array} Lista de itens agrupados
+     */
+    groupSimilarItems(inventory) {
+        if (!inventory || !Array.isArray(inventory) || inventory.length === 0) {
+            return [];
+        }
+        
+        const groupedItems = {};
+        
+        inventory.forEach(item => {
+            // Para equipamentos e itens com IDs específicos, não agrupar
+            if (item.is_equippable || item.is_unique) {
+                const uniqueKey = `unique_${item.id}`;
+                groupedItems[uniqueKey] = { ...item };
+                return;
+            }
+            
+            // Para outros itens, agrupar por nome e tipo
+            const key = `${item.name}_${item.item_type || 'general'}`;
+            
+            if (!groupedItems[key]) {
+                // Criar novo grupo
+                groupedItems[key] = { ...item, quantity: item.quantity || 1 };
+            } else {
+                // Incrementar quantidade
+                groupedItems[key].quantity = (groupedItems[key].quantity || 1) + (item.quantity || 1);
+            }
+        });
+        
+        return Object.values(groupedItems);
     }
     
     /**

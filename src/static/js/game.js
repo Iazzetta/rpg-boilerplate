@@ -495,27 +495,49 @@ class Game {
         // Ocultar recurso temporariamente
         this.hideResource(resource);
         
-        // Gerar itens coletados (simulação)
-        const itemsColetados = [
-            { 
-                id: `item_${Date.now()}`, 
-                name: resource.name, 
-                quantity: Math.floor(Math.random() * 3) + 1,
-                rarity: 'common',
-                item_type: 'resource',
-                description: `${resource.name} coletado da área ${this.currentArea.name}`
-            }
-        ];
+        // Determinar quantidade coletada (1-3)
+        const itemQuantity = Math.floor(Math.random() * 3) + 1;
         
-        // Adicionar itens ao inventário do jogador
-        if (!this.player.inventory) {
-            this.player.inventory = [];
+        // Gerar item coletado
+        const itemColetado = { 
+            id: `item_${Date.now()}`, 
+            name: resource.name, 
+            quantity: itemQuantity,
+            rarity: 'common',
+            item_type: 'resource',
+            description: `${resource.name} coletado da área ${this.currentArea.name}`
+        };
+        
+        // Verificar se já existe este item no inventário para agrupamento
+        let itemAdicionado = false;
+        if (this.player.inventory) {
+            // Procurar por item similar (mesmo nome e tipo)
+            const existingItemIndex = this.player.inventory.findIndex(
+                item => item.name === itemColetado.name && 
+                       item.item_type === itemColetado.item_type && 
+                       !item.is_equippable && 
+                       !item.is_unique
+            );
+            
+            if (existingItemIndex !== -1) {
+                // Aumentar a quantidade do item existente
+                if (!this.player.inventory[existingItemIndex].quantity) {
+                    this.player.inventory[existingItemIndex].quantity = 1;
+                }
+                this.player.inventory[existingItemIndex].quantity += itemQuantity;
+                itemAdicionado = true;
+                console.log(`Quantidade de ${resource.name} aumentada para ${this.player.inventory[existingItemIndex].quantity}`);
+            }
         }
         
-        itemsColetados.forEach(item => {
-            this.player.inventory.push(item);
-            console.log(`${item.name} (${item.quantity}) adicionado ao inventário.`);
-        });
+        // Se não encontrou item similar, adicionar como novo item
+        if (!itemAdicionado) {
+            if (!this.player.inventory) {
+                this.player.inventory = [];
+            }
+            this.player.inventory.push(itemColetado);
+            console.log(`${resource.name} (${itemQuantity}) adicionado ao inventário.`);
+        }
         
         // Atualizar UI de inventário
         if (this.ui) {
@@ -525,7 +547,7 @@ class Game {
         
         // Atualizar UI de coleta (fechar automaticamente após coleta)
         if (this.ui) {
-            this.ui.showHarvestResults(itemsColetados);
+            this.ui.showHarvestResults([itemColetado]);
             
             // Fechar a tela de coleta após 2 segundos
             setTimeout(() => {
@@ -979,6 +1001,228 @@ class Game {
         if (this.ui) {
             this.ui.updateAreaInfo(this.currentArea);
         }
+    }
+    
+    /**
+     * Seleciona um item do inventário ou equipamento
+     * @param {object} item - Item selecionado
+     * @param {string} source - Fonte do item (inventory/equipment)
+     */
+    selectItem(item, source) {
+        console.log(`Item selecionado: ${item.name} de ${source}`);
+        
+        // Adicionar a fonte ao item para saber como tratá-lo
+        const itemWithSource = { ...item, source };
+        
+        // Mostrar detalhes do item
+        if (this.ui) {
+            this.ui.showItemDetails(itemWithSource);
+        }
+    }
+    
+    /**
+     * Usa um item consumível
+     * @param {object} item - Item a ser usado
+     * @returns {boolean} Sucesso da operação
+     */
+    useItem(item) {
+        console.log(`Tentando usar item: ${item.name}`);
+        
+        if (!item || !item.item_type || item.item_type !== 'consumable') {
+            console.error('Item inválido ou não é consumível');
+            return false;
+        }
+        
+        // Remover o item do inventário
+        const inventoryIndex = this.player.inventory.findIndex(i => i.id === item.id);
+        if (inventoryIndex === -1) {
+            console.error('Item não encontrado no inventário');
+            return false;
+        }
+        
+        // Verificar se é um item de cura
+        if (item.name.toLowerCase().includes('poção') || item.name.toLowerCase().includes('cura')) {
+            // Curar o jogador (valor fixo de 50 pontos)
+            const healAmount = 50;
+            this.player.health = Math.min(this.player.maxHealth, this.player.health + healAmount);
+            console.log(`Jogador curado em ${healAmount} pontos de vida. Vida atual: ${this.player.health}`);
+            
+            // Adicionar mensagem ao log
+            if (this.ui) {
+                this.ui.addToLog(`Você usou ${item.name} e recuperou ${healAmount} pontos de vida.`);
+            }
+        }
+        
+        // Reduzir a quantidade do item ou removê-lo
+        if (this.player.inventory[inventoryIndex].quantity && this.player.inventory[inventoryIndex].quantity > 1) {
+            this.player.inventory[inventoryIndex].quantity--;
+            console.log(`Quantidade reduzida: ${this.player.inventory[inventoryIndex].quantity}`);
+        } else {
+            // Remover o item completamente
+            this.player.inventory.splice(inventoryIndex, 1);
+            console.log('Item removido do inventário');
+        }
+        
+        // Atualizar UI
+        if (this.ui) {
+            this.ui.updatePlayerInfo(this.player);
+            this.ui.updateSidebarInventory(this.player.inventory, this.player.equipment || []);
+            this.ui.hideItemDetails();
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Vende um item
+     * @param {object} item - Item a ser vendido
+     * @returns {boolean} Sucesso da operação
+     */
+    sellItem(item) {
+        console.log(`Tentando vender item: ${item.name}`);
+        
+        if (!item) return false;
+        
+        // Encontrar o item no inventário
+        const inventoryIndex = this.player.inventory.findIndex(i => i.id === item.id);
+        if (inventoryIndex === -1) {
+            console.error('Item não encontrado no inventário');
+            return false;
+        }
+        
+        // Calcular valor de venda (5% do preço original)
+        let sellPrice = 0;
+        if (item.price) {
+            sellPrice = Math.floor(item.price * 0.05);
+        } else {
+            // Preço base para itens sem preço definido
+            sellPrice = 1;
+        }
+        
+        // Adicionar ouro ao jogador
+        this.player.gold += sellPrice;
+        
+        // Reduzir a quantidade do item ou removê-lo
+        if (this.player.inventory[inventoryIndex].quantity && this.player.inventory[inventoryIndex].quantity > 1) {
+            this.player.inventory[inventoryIndex].quantity--;
+            console.log(`Quantidade reduzida: ${this.player.inventory[inventoryIndex].quantity}`);
+        } else {
+            // Remover o item completamente
+            this.player.inventory.splice(inventoryIndex, 1);
+            console.log('Item removido do inventário');
+        }
+        
+        // Atualizar UI
+        if (this.ui) {
+            this.ui.updatePlayerInfo(this.player);
+            this.ui.updateSidebarInventory(this.player.inventory, this.player.equipment || []);
+            this.ui.hideItemDetails();
+            this.ui.addToLog(`Você vendeu ${item.name} por ${sellPrice} de ouro.`);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Equipa um item
+     * @param {object} item - Item a ser equipado
+     * @returns {boolean} Sucesso da operação
+     */
+    equipItem(item) {
+        console.log(`Tentando equipar: ${item.name}`);
+        
+        if (!item || !item.is_equippable) {
+            console.error('Item inválido ou não é equipável');
+            return false;
+        }
+        
+        // Inicializar array de equipamento se não existir
+        if (!this.player.equipment) {
+            this.player.equipment = [];
+        }
+        
+        // Determinar o tipo de slot
+        let slotType = item.item_type;
+        
+        // Verificar se já existe um item no mesmo slot
+        const equippedItemIndex = this.player.equipment.findIndex(i => i.item_type === slotType);
+        let equippedItem = null;
+        
+        if (equippedItemIndex !== -1) {
+            // Guardar o item equipado para movê-lo para o inventário
+            equippedItem = this.player.equipment[equippedItemIndex];
+            // Remover o item equipado
+            this.player.equipment.splice(equippedItemIndex, 1);
+        }
+        
+        // Remover o novo item do inventário
+        const inventoryIndex = this.player.inventory.findIndex(i => i.id === item.id);
+        if (inventoryIndex === -1) {
+            console.error('Item não encontrado no inventário');
+            return false;
+        }
+        
+        // Remover o item do inventário
+        this.player.inventory.splice(inventoryIndex, 1);
+        
+        // Adicionar o item ao equipamento
+        this.player.equipment.push(item);
+        
+        // Se tinha um item equipado, movê-lo para o inventário
+        if (equippedItem) {
+            this.player.inventory.push(equippedItem);
+        }
+        
+        // Atualizar UI
+        if (this.ui) {
+            this.ui.updatePlayerInfo(this.player);
+            this.ui.updateSidebarInventory(this.player.inventory, this.player.equipment);
+            this.ui.hideItemDetails();
+            this.ui.addToLog(`Você equipou ${item.name}.`);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Desequipa um item
+     * @param {object} item - Item a ser desequipado
+     * @returns {boolean} Sucesso da operação
+     */
+    unequipItem(item) {
+        console.log(`Tentando desequipar: ${item.name}`);
+        
+        if (!this.player.equipment) {
+            console.error('Jogador não tem itens equipados');
+            return false;
+        }
+        
+        // Encontrar o item no equipamento
+        const equipmentIndex = this.player.equipment.findIndex(i => i.id === item.id);
+        if (equipmentIndex === -1) {
+            console.error('Item não encontrado no equipamento');
+            return false;
+        }
+        
+        // Remover o item do equipamento
+        const removedItem = this.player.equipment.splice(equipmentIndex, 1)[0];
+        
+        // Adicionar o item ao inventário
+        if (!this.player.inventory) {
+            this.player.inventory = [];
+        }
+        
+        this.player.inventory.push(removedItem);
+        
+        // Atualizar UI
+        if (this.ui) {
+            this.ui.updatePlayerInfo(this.player);
+            this.ui.updateSidebarInventory(this.player.inventory, this.player.equipment);
+            this.ui.hideItemDetails();
+            this.ui.addToLog(`Você desequipou ${item.name}.`);
+        }
+        
+        return true;
     }
 }
 
