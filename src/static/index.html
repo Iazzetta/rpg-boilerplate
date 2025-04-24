@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Adventure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Tela inicial -->
+        <div id="welcome-screen" class="screen">
+            <h1>RPG Adventure</h1>
+            <div class="form-group">
+                <label for="player-name">Digite seu nome:</label>
+                <input type="text" id="player-name" placeholder="Nome do jogador">
+                <button id="start-game-btn">Iniciar Jogo</button>
+            </div>
+        </div>
+
+        <!-- Interface principal do jogo -->
+        <div id="game-screen" class="screen hidden">
+            <div id="game-ui">
+                <div id="player-info">
+                    <div id="player-basic-info">
+                        <div id="player-name-container">
+                            <h2 id="player-name-display">Aventureiro</h2>
+                            <span id="level-container">Nível <span id="level-value">1</span></span>
+                        </div>
+                        <div id="status-bars">
+                            <div class="status-bar">
+                                <div class="bar-label">Vida:</div>
+                                <div class="bar-container">
+                                    <div id="hp-fill" class="bar-fill"></div>
+                                    <span id="hp-text" class="bar-text">100/100</span>
+                                </div>
+                            </div>
+                            <div class="status-bar">
+                                <div class="bar-label">EXP:</div>
+                                <div class="bar-container">
+                                    <div id="exp-fill" class="bar-fill"></div>
+                                    <span id="exp-text" class="bar-text">0/100</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="resource-info">
+                            <div class="resource">
+                                <div class="resource-icon">💰</div>
+                                <div class="resource-value"><span id="gold-value">50</span> ouro</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="game-world">
+                    <div id="area-container">
+                        <h3 id="area-name">Cidade Principal</h3>
+                    </div>
+                    <!-- Canvas será criado via JavaScript -->
+                    <div id="log-container" class="log-container">
+                        <div id="log-content" class="log-content"></div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-right">
+                    <div class="sidebar-section">
+                        <div class="sidebar-header">Status</div>
+                        <div class="sidebar-content quick-stats-sidebar">
+                            <div class="stat-row">
+                                <span class="stat-label">Força:</span>
+                                <span id="strength-value" class="stat-value-sidebar">10</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Inteligência:</span>
+                                <span id="intelligence-value" class="stat-value-sidebar">10</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Destreza:</span>
+                                <span id="dexterity-value" class="stat-value-sidebar">10</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Constituição:</span>
+                                <span id="constitution-value" class="stat-value-sidebar">10</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Pontos disponíveis:</span>
+                                <span id="attribute-points-value" class="stat-value-sidebar">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-header">Equipamento</div>
+                        <div class="sidebar-content">
+                            <div class="equipped-items">
+                                <div class="equipment-slot" data-slot="weapon">
+                                    <span class="slot-name">Arma</span>
+                                </div>
+                                <div class="equipment-slot" data-slot="armor">
+                                    <span class="slot-name">Armadura</span>
+                                </div>
+                                <div class="equipment-slot" data-slot="helmet">
+                                    <span class="slot-name">Elmo</span>
+                                </div>
+                                <div class="equipment-slot" data-slot="gloves">
+                                    <span class="slot-name">Luvas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-header">Inventário <span id="inventory-count">0</span>/<span id="inventory-max">20</span></div>
+                        <div class="sidebar-content">
+                            <div class="inventory-grid" id="inventory-items">
+                                <!-- Slots gerados via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu de inventário -->
+        <div id="inventory-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <h2>Inventário</h2>
+                <div class="inventory-container">
+                    <div class="equipped-items">
+                        <h3>Equipados</h3>
+                        <div id="equipped-items-list" class="items-grid"></div>
+                    </div>
+                    <div class="inventory-items">
+                        <h3>Itens (<span id="inventory-count">0</span>/<span id="inventory-max">20</span>)</h3>
+                        <div id="inventory-items-list" class="items-grid"></div>
+                    </div>
+                </div>
+                <button id="inventory-close-btn" class="close-btn">Fechar</button>
+            </div>
+        </div>
+        
+        <!-- Menu de Status -->
+        <div id="stats-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <h2>Status do Personagem</h2>
+                <div class="stats-container">
+                    <div class="attributes-section">
+                        <h3>Atributos Básicos</h3>
+                        <div class="attribute-row">
+                            <span>Força:</span>
+                            <span id="str-value">10</span>
+                            <button class="add-attribute-btn" data-attribute="strength">+</button>
+                        </div>
+                        <div class="attribute-row">
+                            <span>Inteligência:</span>
+                            <span id="int-value">10</span>
+                            <button class="add-attribute-btn" data-attribute="intelligence">+</button>
+                        </div>
+                        <div class="attribute-row">
+                            <span>Destreza:</span>
+                            <span id="dex-value">10</span>
+                            <button class="add-attribute-btn" data-attribute="dexterity">+</button>
+                        </div>
+                        <div class="attribute-row">
+                            <span>Constituição:</span>
+                            <span id="con-value">10</span>
+                            <button class="add-attribute-btn" data-attribute="constitution">+</button>
+                        </div>
+                        <div class="attribute-points">
+                            Pontos disponíveis: <span id="points-value">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="derived-stats-section">
+                        <h3>Atributos Derivados</h3>
+                        <div class="stat-row">
+                            <span>Vida:</span>
+                            <span id="health-value">100</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Mana:</span>
+                            <span id="mana-value">100</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Poder Físico:</span>
+                            <span id="physical-value">10</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Resistência Mágica:</span>
+                            <span id="magic-resist-value">10</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Velocidade:</span>
+                            <span id="speed-value">10</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Poder Mágico:</span>
+                            <span id="magic-power-value">10</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Armadura:</span>
+                            <span id="armor-value">5</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Chance Crítica:</span>
+                            <span id="crit-chance-value">5%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Dano Crítico:</span>
+                            <span id="crit-power-value">150%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Sorte:</span>
+                            <span id="luck-value">1.0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="life-skills-section">
+                        <h3>Habilidades de Vida</h3>
+                        <div class="skill-row">
+                            <span>Culinária:</span>
+                            <span id="cooking-value">0.0</span>
+                        </div>
+                        <div class="skill-row">
+                            <span>Pesca:</span>
+                            <span id="fishing-value">0.0</span>
+                        </div>
+                        <div class="skill-row">
+                            <span>Mineração:</span>
+                            <span id="mining-value">0.0</span>
+                        </div>
+                        <div class="skill-row">
+                            <span>Coleta:</span>
+                            <span id="gathering-value">0.0</span>
+                        </div>
+                        <div class="skill-row">
+                            <span>Lenhador:</span>
+                            <span id="lumbering-value">0.0</span>
+                        </div>
+                        <div class="skill-row">
+                            <span>Artesanato:</span>
+                            <span id="crafting-value">0.0</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="stats-close-btn" class="close-btn">Fechar</button>
+            </div>
+        </div>
+        
+        <!-- Menu de Mapa -->
+        <div id="map-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <h2>Mapa do Mundo</h2>
+                <div class="map-container">
+                    <div class="map-location" data-area="city">Cidade</div>
+                    <div class="map-location" data-area="forest_1">Floresta Iniciante</div>
+                    <div class="map-location" data-area="forest_2">Floresta Intermediária</div>
+                    <div class="map-location" data-area="forest_3">Floresta Avançada</div>
+                </div>
+                <button id="map-close-btn" class="close-btn">Fechar</button>
+            </div>
+        </div>
+        
+        <!-- Menu de Mercado -->
+        <div id="market-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <div class="close-button" onclick="gameUI.hideAllOverlays()">&times;</div>
+                <h2>Mercador</h2>
+                <div id="market-items-container" class="market-items">
+                    <!-- Itens do mercado serão adicionados aqui -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu de Forja -->
+        <div id="forge-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <h2>Forja</h2>
+                <div class="forge-container">
+                    <div class="forge-item-selection">
+                        <h3>Selecione um item para aprimorar</h3>
+                        <div id="forge-items-list" class="items-grid"></div>
+                    </div>
+                    <div class="forge-scroll-selection">
+                        <h3>Selecione um pergaminho</h3>
+                        <div id="forge-scrolls-list" class="items-grid"></div>
+                    </div>
+                    <div class="forge-result">
+                        <h3>Resultado</h3>
+                        <div id="forge-selected-item">Nenhum item selecionado</div>
+                        <div id="forge-selected-scroll">Nenhum pergaminho selecionado</div>
+                        <div id="forge-chance">Chance de sucesso: 0%</div>
+                        <button id="forge-enhance-btn" disabled>Aprimorar</button>
+                        <div id="forge-result-message"></div>
+                    </div>
+                </div>
+                <button id="forge-close-btn" class="close-btn">Fechar</button>
+            </div>
+        </div>
+        
+        <!-- Menu de Batalha -->
+        <div id="battle-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <div class="close-button" onclick="gameUI.hideBattleUI()">&times;</div>
+                <h2>Batalha</h2>
+                <div class="battle-container">
+                    <div class="combatants">
+                        <div class="combatant">
+                            <h3 id="player-battle-name">Jogador</h3>
+                            <div class="hp-container">
+                                <div class="hp-bar">
+                                    <div id="battle-player-hp-fill" class="hp-fill"></div>
+                                </div>
+                                <div id="battle-player-hp-text" class="hp-text">100/100</div>
+                            </div>
+                        </div>
+                        <div class="versus">VS</div>
+                        <div class="combatant">
+                            <h3 id="battle-enemy-name">Inimigo</h3>
+                            <div class="hp-container">
+                                <div class="hp-bar">
+                                    <div id="battle-enemy-hp-fill" class="hp-fill enemy"></div>
+                                </div>
+                                <div id="battle-enemy-hp-text" class="hp-text">30/30</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="battle-results" class="battle-results hidden">
+                        <!-- Resultados da batalha serão adicionados aqui -->
+                    </div>
+                    <div id="battle-log" class="battle-log">
+                        <!-- Log da batalha será adicionado aqui -->
+                    </div>
+                    <div id="battle-controls" class="battle-controls">
+                        <div class="cooldown-container">
+                            <div class="progress-container">
+                                <div id="battle-cooldown-bar" class="progress-bar"></div>
+                            </div>
+                            <div id="battle-cooldown-text" class="progress-text">Pronto para atacar</div>
+                        </div>
+                        <button id="battle-attack-btn" class="battle-btn">Atacar</button>
+                        <button id="battle-flee-btn" class="battle-btn flee">Fugir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu de Coleta -->
+        <div id="harvest-screen" class="overlay-screen hidden">
+            <div class="overlay-content">
+                <div class="close-button" onclick="gameUI.hideHarvestUI()">&times;</div>
+                <h2>Coletando Recurso</h2>
+                <div class="harvest-container">
+                    <div class="resource-info">
+                        <h3 id="harvest-resource-name">Nome do Recurso</h3>
+                        <p id="harvest-resource-description">Descrição do recurso...</p>
+                        <div class="skill-info">
+                            <span>Habilidade: <span id="harvest-skill-name">Habilidade</span></span>
+                            <span>Nível: <span id="harvest-skill-level">1.0</span></span>
+                        </div>
+                    </div>
+                    <div class="harvest-progress">
+                        <div class="progress-container">
+                            <div id="harvest-progress-bar" class="progress-bar"></div>
+                        </div>
+                        <div id="harvest-progress-text" class="progress-text">Pronto para coletar</div>
+                    </div>
+                    <div id="harvest-result-message" class="harvest-result"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu de detalhes do item -->
+        <div id="item-details-screen" class="overlay-screen hidden">
+            <div class="overlay-content small-overlay">
+                <h2 id="item-details-name">Nome do Item</h2>
+                <p id="item-details-description">Descrição do item</p>
+                <div id="item-details-stats"></div>
+                <div id="item-details-actions">
+                    <button id="item-equip-btn" class="hidden">Equipar</button>
+                    <button id="item-unequip-btn" class="hidden">Desequipar</button>
+                    <button id="item-use-btn" class="hidden">Usar</button>
+                    <button id="item-sell-btn">Vender</button>
+                </div>
+                <button id="item-details-close-btn" class="close-btn">Fechar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão de toggle da sidebar em dispositivos móveis -->
+    <button class="toggle-sidebar" id="toggle-sidebar">☰</button>
+    
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Inicializar o jogo quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar o jogo
+            window.game = new Game();
+            window.gameUI = game.ui;
+            
+            // Inicializar a sidebar em dispositivos móveis
+            const toggleButton = document.getElementById('toggle-sidebar');
+            const sidebar = document.querySelector('.sidebar-right');
+            
+            if (toggleButton && sidebar) {
+                toggleButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('visible');
+                });
+            }
+            
+            // Inicializar grade de inventário
+            initInventoryGrid();
+        });
+        
+        // Função para inicializar a grade de inventário
+        function initInventoryGrid() {
+            const inventoryGrid = document.getElementById('inventory-items');
+            if (!inventoryGrid) return;
+            
+            // Limpar grade existente
+            inventoryGrid.innerHTML = '';
+            
+            // Criar slots de inventário
+            for (let i = 0; i < 20; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inventory-slot';
+                slot.dataset.slotIndex = i;
+                inventoryGrid.appendChild(slot);
+            }
+        }
+    </script>
+</body>
+</html> 

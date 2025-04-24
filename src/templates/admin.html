@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Adventure - Admin</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #343a40;
+        }
+        
+        .admin-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .admin-tab.active {
+            border-bottom: 2px solid var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="admin-panel">
+        <h1>RPG Adventure - Painel de Administração</h1>
+        
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="items">Itens</div>
+            <div class="admin-tab" data-tab="resources">Recursos</div>
+            <div class="admin-tab" data-tab="npcs">NPCs</div>
+            <div class="admin-tab" data-tab="game">Controle do Jogo</div>
+        </div>
+        
+        <!-- Items Tab -->
+        <div id="items-tab" class="tab-content active">
+            <div class="admin-section">
+                <h2>Adicionar Novo Item</h2>
+                <form id="add-item-form" class="admin-form">
+                    <div>
+                        <label for="item-name">Nome</label>
+                        <input type="text" id="item-name" name="name" placeholder="Nome do item" required>
+                    </div>
+                    
+                    <div>
+                        <label for="item-type">Tipo</label>
+                        <select id="item-type" name="item_type" required>
+                            <option value="general">Geral</option>
+                            <option value="resource">Recurso</option>
+                            <option value="buffer">Buffer</option>
+                            <option value="mount">Montaria</option>
+                            <option value="scroll">Pergaminho</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="item-rarity">Raridade</label>
+                        <select id="item-rarity" name="rarity" required>
+                            <option value="common">Comum</option>
+                            <option value="uncommon">Incomum</option>
+                            <option value="rare">Raro</option>
+                            <option value="epic">Épico</option>
+                            <option value="legendary">Lendário</option>
+                            <option value="unique">Único</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="item-price">Preço</label>
+                        <input type="number" id="item-price" name="price" value="10" min="0" required>
+                    </div>
+                    
+                    <div>
+                        <label for="item-sell-price">Preço de Venda</label>
+                        <input type="number" id="item-sell-price" name="sell_price" value="5" min="0" required>
+                    </div>
+                    
+                    <div class="admin-form-full">
+                        <label for="item-description">Descrição</label>
+                        <textarea id="item-description" name="description" placeholder="Descrição do item"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label>Opções</label>
+                        <div>
+                            <input type="checkbox" id="is-tradable" name="is_tradable" checked>
+                            <label for="is-tradable">Negociável</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="is-consumable" name="is_consumable">
+                            <label for="is-consumable">Consumível</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="is-equippable" name="is_equippable">
+                            <label for="is-equippable">Equipável</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="is-boostable" name="is_boostable">
+                            <label for="is-boostable">Aprimorável</label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Atributos</h3>
+                        <div>
+                            <label for="item-strength">Força</label>
+                            <input type="number" id="item-strength" name="strength" value="0">
+                        </div>
+                        <div>
+                            <label for="item-intelligence">Inteligência</label>
+                            <input type="number" id="item-intelligence" name="intelligence" value="0">
+                        </div>
+                        <div>
+                            <label for="item-dexterity">Destreza</label>
+                            <input type="number" id="item-dexterity" name="dexterity" value="0">
+                        </div>
+                        <div>
+                            <label for="item-constitution">Constituição</label>
+                            <input type="number" id="item-constitution" name="constitution" value="0">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Atributos Derivados</h3>
+                        <div>
+                            <label for="item-health">Vida</label>
+                            <input type="number" id="item-health" name="health" value="0">
+                        </div>
+                        <div>
+                            <label for="item-mana">Mana</label>
+                            <input type="number" id="item-mana" name="mana" value="0">
+                        </div>
+                        <div>
+                            <label for="item-physical-power">Poder Físico</label>
+                            <input type="number" id="item-physical-power" name="physical_power" value="0">
+                        </div>
+                        <div>
+                            <label for="item-magic-power">Poder Mágico</label>
+                            <input type="number" id="item-magic-power" name="magic_power" value="0">
+                        </div>
+                        <div>
+                            <label for="item-armor">Armadura</label>
+                            <input type="number" id="item-armor" name="armor" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="admin-controls">
+                        <button type="submit" class="primary-btn">Adicionar Item</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h2>Itens Cadastrados</h2>
+                <table class="admin-table" id="items-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Raridade</th>
+                            <th>Preço</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Itens serão adicionados aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Resources Tab -->
+        <div id="resources-tab" class="tab-content">
+            <div class="admin-section">
+                <h2>Adicionar Novo Recurso</h2>
+                <form id="add-resource-form" class="admin-form">
+                    <div>
+                        <label for="resource-name">Nome</label>
+                        <input type="text" id="resource-name" name="name" placeholder="Nome do recurso" required>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-type">Tipo</label>
+                        <select id="resource-type" name="type_entity" required>
+                            <option value="mining">Mineração</option>
+                            <option value="fishing">Pesca</option>
+                            <option value="gathering">Coleta</option>
+                            <option value="lumbering">Madeira</option>
+                            <option value="cooking">Culinária</option>
+                            <option value="crafting">Artesanato</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-drop">Quantidade Drop</label>
+                        <input type="number" id="resource-drop" name="drop_amount" value="1" min="1" required>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-respawn">Tempo Respawn (seg)</label>
+                        <input type="number" id="resource-respawn" name="respawn_time" value="60" min="1" required>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-hp">HP</label>
+                        <input type="number" id="resource-hp" name="hp" value="10" min="1" required>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-area">Área</label>
+                        <select id="resource-area" name="area" required>
+                            <option value="city">Cidade</option>
+                            <option value="forest_1">Floresta Iniciante</option>
+                            <option value="forest_2">Floresta Intermediária</option>
+                            <option value="forest_3">Floresta Avançada</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-x">Posição X</label>
+                        <input type="number" id="resource-x" name="x" value="100" required>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-y">Posição Y</label>
+                        <input type="number" id="resource-y" name="y" value="100" required>
+                    </div>
+                    
+                    <div class="admin-form-full">
+                        <label for="resource-description">Descrição</label>
+                        <textarea id="resource-description" name="description" placeholder="Descrição do recurso"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label>Opções</label>
+                        <div>
+                            <input type="checkbox" id="is-collidable" name="is_collidable" checked>
+                            <label for="is-collidable">Colidível</label>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-controls">
+                        <button type="submit" class="primary-btn">Adicionar Recurso</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h2>Recursos Cadastrados</h2>
+                <table class="admin-table" id="resources-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Área</th>
+                            <th>Posição</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Recursos serão adicionados aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- NPCs Tab -->
+        <div id="npcs-tab" class="tab-content">
+            <div class="admin-section">
+                <h2>Adicionar Novo NPC</h2>
+                <form id="add-npc-form" class="admin-form">
+                    <div>
+                        <label for="npc-name">Nome</label>
+                        <input type="text" id="npc-name" name="name" placeholder="Nome do NPC" required>
+                    </div>
+                    
+                    <div>
+                        <label for="npc-level">Nível</label>
+                        <input type="number" id="npc-level" name="level" value="1" min="1" required>
+                    </div>
+                    
+                    <div>
+                        <label for="npc-hp">HP</label>
+                        <input type="number" id="npc-hp" name="hp" value="50" min="1" required>
+                    </div>
+                    
+                    <div>
+                        <label for="npc-area">Área</label>
+                        <select id="npc-area" name="area" required>
+                            <option value="city">Cidade</option>
+                            <option value="forest_1">Floresta Iniciante</option>
+                            <option value="forest_2">Floresta Intermediária</option>
+                            <option value="forest_3">Floresta Avançada</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="npc-x">Posição X</label>
+                        <input type="number" id="npc-x" name="x" value="200" required>
+                    </div>
+                    
+                    <div>
+                        <label for="npc-y">Posição Y</label>
+                        <input type="number" id="npc-y" name="y" value="200" required>
+                    </div>
+                    
+                    <div class="admin-controls">
+                        <button type="submit" class="primary-btn">Adicionar NPC</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h2>NPCs Cadastrados</h2>
+                <table class="admin-table" id="npcs-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Nível</th>
+                            <th>Área</th>
+                            <th>Posição</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- NPCs serão adicionados aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Game Control Tab -->
+        <div id="game-tab" class="tab-content">
+            <div class="admin-section">
+                <h2>Controle do Jogo</h2>
+                <div class="admin-controls">
+                    <button id="reset-game-btn" class="primary-btn">Resetar Jogo</button>
+                    <button id="save-game-btn" class="primary-btn">Salvar Estado</button>
+                    <button id="return-game-btn" class="primary-btn">Voltar ao Jogo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tabs
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.getAttribute('data-tab');
+                    
+                    // Ativar tab
+                    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Mostrar conteúdo
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${target}-tab`).classList.add('active');
+                });
+            });
+            
+            // Carregar dados
+            loadItems();
+            loadResources();
+            loadNPCs();
+            
+            // Handlers para formulários
+            document.getElementById('add-item-form').addEventListener('submit', addItem);
+            document.getElementById('add-resource-form').addEventListener('submit', addResource);
+            document.getElementById('add-npc-form').addEventListener('submit', addNPC);
+            
+            // Handlers para botões de controle
+            document.getElementById('reset-game-btn').addEventListener('click', resetGame);
+            document.getElementById('save-game-btn').addEventListener('click', saveGame);
+            document.getElementById('return-game-btn').addEventListener('click', () => {
+                window.location.href = '/';
+            });
+        });
+        
+        // Funções para carregar dados
+        async function loadItems() {
+            try {
+                const items = await API.adminGetItems();
+                const tbody = document.querySelector('#items-table tbody');
+                tbody.innerHTML = '';
+                
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.id.substr(0, 8)}...</td>
+                        <td>${item.name}</td>
+                        <td>${item.item_type}</td>
+                        <td>${item.rarity}</td>
+                        <td>${item.price}</td>
+                        <td><button class="view-item" data-id="${item.id}">Ver</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading items:', error);
+            }
+        }
+        
+        async function loadResources() {
+            try {
+                const resources = await API.adminGetResources();
+                const tbody = document.querySelector('#resources-table tbody');
+                tbody.innerHTML = '';
+                
+                resources.forEach(resource => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${resource.id.substr(0, 8)}...</td>
+                        <td>${resource.name}</td>
+                        <td>${resource.type}</td>
+                        <td>${resource.area}</td>
+                        <td>(${resource.position.x}, ${resource.position.y})</td>
+                        <td><button class="view-resource" data-id="${resource.id}">Ver</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading resources:', error);
+            }
+        }
+        
+        async function loadNPCs() {
+            try {
+                const npcs = await API.adminGetNPCs();
+                const tbody = document.querySelector('#npcs-table tbody');
+                tbody.innerHTML = '';
+                
+                npcs.forEach(npc => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${npc.id.substr(0, 8)}...</td>
+                        <td>${npc.name}</td>
+                        <td>${npc.level}</td>
+                        <td>${npc.area}</td>
+                        <td>(${npc.position.x}, ${npc.position.y})</td>
+                        <td><button class="view-npc" data-id="${npc.id}">Ver</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading NPCs:', error);
+            }
+        }
+        
+        // Funções para adicionar dados
+        async function addItem(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const itemData = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'is_tradable' || key === 'is_consumable' || key === 'is_equippable' || key === 'is_boostable') {
+                    itemData[key] = true; // Checkbox checked
+                } else {
+                    itemData[key] = value;
+                }
+            });
+            
+            // Adicionar flags para checkboxes não marcados
+            if (!formData.has('is_tradable')) itemData.is_tradable = false;
+            if (!formData.has('is_consumable')) itemData.is_consumable = false;
+            if (!formData.has('is_equippable')) itemData.is_equippable = false;
+            if (!formData.has('is_boostable')) itemData.is_boostable = false;
+            
+            try {
+                const result = await API.adminAddItem(itemData);
+                if (result.success) {
+                    alert('Item adicionado com sucesso!');
+                    form.reset();
+                    loadItems();
+                } else {
+                    alert(`Erro ao adicionar item: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error adding item:', error);
+                alert('Erro ao adicionar item');
+            }
+        }
+        
+        async function addResource(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const resourceData = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'is_collidable') {
+                    resourceData[key] = true; // Checkbox checked
+                } else {
+                    resourceData[key] = value;
+                }
+            });
+            
+            // Adicionar flags para checkboxes não marcados
+            if (!formData.has('is_collidable')) resourceData.is_collidable = false;
+            
+            try {
+                const result = await API.adminAddResource(resourceData);
+                if (result.success) {
+                    alert('Recurso adicionado com sucesso!');
+                    form.reset();
+                    loadResources();
+                } else {
+                    alert(`Erro ao adicionar recurso: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error adding resource:', error);
+                alert('Erro ao adicionar recurso');
+            }
+        }
+        
+        async function addNPC(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const npcData = {};
+            
+            formData.forEach((value, key) => {
+                npcData[key] = value;
+            });
+            
+            try {
+                const result = await API.adminAddNPC(npcData);
+                if (result.success) {
+                    alert('NPC adicionado com sucesso!');
+                    form.reset();
+                    loadNPCs();
+                } else {
+                    alert(`Erro ao adicionar NPC: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error adding NPC:', error);
+                alert('Erro ao adicionar NPC');
+            }
+        }
+        
+        // Funções de controle do jogo
+        async function resetGame() {
+            if (confirm('Tem certeza que deseja resetar o jogo? Isso apagará todos os dados.')) {
+                try {
+                    const result = await API.adminResetGame();
+                    if (result.success) {
+                        alert('Jogo resetado com sucesso!');
+                        loadItems();
+                        loadResources();
+                        loadNPCs();
+                    } else {
+                        alert(`Erro ao resetar jogo: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error resetting game:', error);
+                    alert('Erro ao resetar jogo');
+                }
+            }
+        }
+        
+        async function saveGame() {
+            try {
+                const result = await API.adminSaveGame();
+                if (result.success) {
+                    alert('Estado do jogo salvo com sucesso!');
+                } else {
+                    alert(`Erro ao salvar estado do jogo: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error saving game:', error);
+                alert('Erro ao salvar estado do jogo');
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,19 @@
+[project]
+name = "rpg-boilerplate"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Guilherme Iazzetta",email = "guilherme.iazzetta@tblmanager.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic (>=2.11.3,<3.0.0)",
+    "flask (>=3.1.0,<4.0.0)",
+    "flask-cors (>=5.0.1,<6.0.0) ; python_version >= \"3.10\" and python_version < \"4.0\""
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
